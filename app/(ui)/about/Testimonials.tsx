@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GoogleReview } from '@/lib/googleReviews';
+import { Review } from '@/lib/googleReviews';
 
 interface TestimonialsProps {
-  testimonials: GoogleReview[];
+  testimonials: Review[];
   darkBackground?: boolean;
 }
 
