@@ -3,6 +3,10 @@ import { SINGLE_LOCATION } from '@/lib/location';
 export default function StaticMap() {
   const { name, googleMapsPlaceUrl, lat, lng } = SINGLE_LOCATION;
   
+  // Default coordinates if not provided (Detroit city center)
+  const latitude = lat ?? 42.3314;
+  const longitude = lng ?? -83.0458;
+  
   // Check if we have MapTiler API key
   const mapTilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
   
@@ -10,11 +14,11 @@ export default function StaticMap() {
   
   if (mapTilerKey && mapTilerKey !== 'TODO_MAPTILER_KEY') {
     // Use MapTiler if API key is available
-    staticMapSrc = `https://api.maptiler.com/maps/streets/static/${lng},${lat},15/600x360@2x.png?key=${mapTilerKey}&markers=${lng},${lat}`;
+    staticMapSrc = `https://api.maptiler.com/maps/streets/static/${longitude},${latitude},15/600x360@2x.png?key=${mapTilerKey}&markers=${longitude},${latitude}`;
   } else {
     // Use OpenStreetMap static image as fallback
     // This creates a simple visual placeholder showing the general area
-    staticMapSrc = `https://tile.openstreetmap.org/15/${Math.floor((lng + 180) * (2**15) / 360)}/${Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * (2**15))}.png`;
+    staticMapSrc = `https://tile.openstreetmap.org/15/${Math.floor((longitude + 180) * (2**15) / 360)}/${Math.floor((1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2 * (2**15))}.png`;
   }
 
   return (

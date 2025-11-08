@@ -13,7 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Semaglutide (GLP-1) Weight Management | Xpress Care Pharmacy, Detroit MI',
     description: 'Clinician-supervised Semaglutide (GLP-1) weight management program at Xpress Care Pharmacy in Detroit. Personalized plans, ongoing support, and professional guidance.',
     keywords: 'semaglutide, GLP-1, weight management, prescription weight loss, medical supervision, Detroit pharmacy',
-    canonical: '/semaglutide',
+    alternates: {
+      canonical: '/semaglutide',
+    },
     openGraph: {
       title: 'Semaglutide (GLP-1) Weight Management | Xpress Care Pharmacy',
       description: 'Clinician-supervised Semaglutide (GLP-1) weight management program at Xpress Care Pharmacy in Detroit. Personalized plans, ongoing support, and professional guidance.',

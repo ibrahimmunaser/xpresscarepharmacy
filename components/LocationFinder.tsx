@@ -41,23 +41,23 @@ export default function LocationFinder() {
                   <div key={h.day} className="flex justify-between text-sm">
                     <span className="text-slate-600">{h.day}</span>
                     <span className="text-brand-navy">
-                      {h.closed ? 'Closed' : formatRange(h.open, h.close)}
+                      {h.note || (h.open && h.close ? formatRange(h.open, h.close) : 'Closed')}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {LOCATION.extras && LOCATION.extras.length > 0 && (
+            {LOCATION.serviceBadges && LOCATION.serviceBadges.length > 0 && (
               <div className="mb-6">
                 <h5 className="text-sm font-semibold text-brand-navy mb-2">Services</h5>
                 <div className="flex flex-wrap gap-2">
-                  {LOCATION.extras.map((extra, index) => (
+                  {LOCATION.serviceBadges.map((badge: string, index: number) => (
                     <span 
                       key={index}
                       className="inline-block bg-brand-50 text-brand-700 text-xs px-2 py-1 rounded-full"
                     >
-                      {extra}
+                      {badge}
                     </span>
                   ))}
                 </div>
