@@ -76,12 +76,10 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Pharmacy',
               name: SITE.name,
-              url: SITE.url,
               telephone: SITE.phone,
-              faxNumber: SITE.fax,
               address: {
                 '@type': 'PostalAddress',
-                streetAddress: [SITE.address.line1, SITE.address.line2].filter(Boolean).join(', '),
+                streetAddress: SITE.address.street,
                 addressLocality: SITE.address.city,
                 addressRegion: SITE.address.state,
                 postalCode: SITE.address.zip,

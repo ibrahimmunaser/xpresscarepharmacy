@@ -2,41 +2,32 @@ import { z } from 'zod'
 
 // Shared helpers for prescription forms
 const phone = z.string().min(7).max(32).trim()
-const optionalPhone = z.string().trim().optional().or(z.literal(''))
+const optionalString = z.string().trim().optional().or(z.literal(''))
+
+// Shared fields for both refill and transfer forms
+const sharedFormFields = {
+  type: z.enum(['refill', 'transfer']),
+  patientName: z.string().min(2).max(100).trim(),
+  dob: z.string().min(4).max(32).trim(), // Will be normalized to YYYY-MM-DD on frontend
+  phone: phone, // Will be normalized on frontend (digits only, preserve leading +)
+  email: z.string().email().trim().optional().or(z.literal('')),
+  medications: z.string().min(1).max(1500).trim(),
+  rxNumber: z.string().max(40).trim().optional().or(z.literal('')),
+  notes: z.string().max(1500).trim().optional().or(z.literal('')),
+  website: z.string().optional().or(z.literal('')), // Honeypot
+  ts: z.string().optional(), // ISO timestamp
+}
 
 export const RefillSchema = z.object({
-  patientName: z.string().min(2).max(120),
-  dateOfBirth: z.string().min(4).max(32), // store as string; no DOB parsing on server
-  patientPhone: phone,
-  patientEmail: z.string().email().optional().or(z.literal('')),
-  rxNumbers: z.string().min(1).max(2000), // free text; can contain multiple rx# separated by commas/newlines
-  notes: z.string().max(2000).optional().or(z.literal('')),
-  consent: z.literal(true), // must be checked
-  // Honeypot field
-  company: z.string().optional().or(z.literal('')),
+  ...sharedFormFields,
+  type: z.literal('refill'),
 })
 
 export const TransferSchema = z.object({
-  // From (current pharmacy) entered by patient
-  fromPharmacyName: z.string().min(2).max(200),
-  fromPharmacyPhone: phone,
-  fromPharmacyFax: optionalPhone,
-  fromPharmacyZip: z.string().min(3).max(15).optional().or(z.literal('')),
-
-  // Patient identifiers
-  patientName: z.string().min(2).max(120),
-  dateOfBirth: z.string().min(4).max(32),
-  patientPhone: phone,
-
-  // Rx list to transfer
-  meds: z.string().min(1).max(4000),
-
-  // Authorization
-  consent: z.literal(true),
-  eSignature: z.string().min(2).max(120), // typed signature (name)
-  
-  // Honeypot field
-  company: z.string().optional().or(z.literal('')),
+  ...sharedFormFields,
+  type: z.literal('transfer'),
+  fromPharmacy: z.string().min(2).max(120).trim(),
+  fromPharmacyPhone: phone, // Will be normalized on frontend
 })
 
 export type RefillFormData = z.infer<typeof RefillSchema>

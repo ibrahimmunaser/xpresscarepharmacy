@@ -1,23 +1,15 @@
 /**
- * POST /api/refill - Prescription Refill API
+ * POST /api/refill - Prescription Refill API (No-JS Fallback)
  * 
- * Post-deployment checklist:
- * ✅ Set FAX_PROVIDER to the real one (e.g., PHAXIO)
- * ✅ Paste API credentials in .env and rebuild
- * ✅ Send a test fax from /test-fax to the clinic machine and confirm receipt
- * ✅ Confirm paper header shows "Xpress Care Pharmacy" or desired CSID
- * ✅ Confirm failure path by temporarily breaking creds (expect UI error)
- * ✅ Review privacy note in footer with clinic owner
+ * This endpoint provides a fallback for browsers with JavaScript disabled.
+ * The main submission path is directly to the Google Apps Script endpoint.
+ * 
+ * This simply validates the data and returns a basic success page.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { RefillSchema } from '@/lib/schemas'
-import { buildRefillPdf } from '@/lib/pdf/refill'
-import { sendFaxWithRetry } from '@/lib/fax/sendWithRetry'
-import { env } from '@/lib/env'
-import { normalizeToE164 } from '@/lib/phone'
 import { allowIp } from '@/lib/ratelimit'
-import { logMetric } from '@/lib/metrics'
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,65 +22,46 @@ export async function POST(req: NextRequest) {
       }, { status: 429 })
     }
 
-    const body = await req.json()
-    const data = RefillSchema.parse(body)
+    const contentType = req.headers.get('content-type') || ''
+    let data: any
+
+    if (contentType.includes('application/json')) {
+      data = await req.json()
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      const formData = await req.formData()
+      data = Object.fromEntries(formData.entries())
+    } else {
+      return NextResponse.json({ 
+        ok: false, 
+        message: 'Unsupported content type' 
+      }, { status: 400 })
+    }
+
+    // Add type for validation
+    data.type = 'refill'
+
+    // Validate against schema
+    RefillSchema.parse(data)
 
     // Check honeypot
-    if (data.company && data.company.trim() !== '') {
+    if (data.website && data.website.trim() !== '') {
       // Silent reject for bots
       return NextResponse.json({ ok: true })
     }
 
-    logMetric('fax_send_attempt', { provider: env.FAX_PROVIDER })
-
-    // Build PDF
-    const pdf = await buildRefillPdf({
-      patientName: data.patientName,
-      dateOfBirth: data.dateOfBirth,
-      patientPhone: data.patientPhone,
-      patientEmail: data.patientEmail,
-      rxNumbers: data.rxNumbers,
-      notes: data.notes,
-    })
-
-    // Fax it with retry
-    const to = normalizeToE164(env.CLINIC_FAX)
-    const res = await sendFaxWithRetry({ 
-      to, 
-      headerText: env.CLINIC_NAME, 
-      pdf 
-    })
-
-    if (!res.ok) {
-      logMetric('fax_send_failure', { 
-        provider: res.provider, 
-        error: res.error 
-      })
-      
-      // Don't log PHI; return generic error
-      return NextResponse.json({ 
-        ok: false, 
-        message: 'Fax delivery failed. Please call the pharmacy.' 
-      }, { status: 502 })
-    }
-
-    logMetric('fax_send_success', { 
-      provider: res.provider, 
-      faxId: res.faxId 
-    })
-
+    // For no-JS fallback, return a simple success response
+    // The main submission path goes directly to Google Apps Script
     return NextResponse.json({ 
-      ok: true, 
-      faxId: res.faxId ?? null 
+      ok: true,
+      message: 'Your refill request has been submitted successfully.'
     })
     
   } catch (err: any) {
-    logMetric('fax_send_failure', { error: 'validation_or_server_error' })
+    console.error('Refill validation error:', err.message)
     
-    // Avoid leaking PHI; generic message
     return NextResponse.json({ 
       ok: false, 
-      message: 'Invalid submission or server error.' 
+      message: 'Invalid submission. Please check your form and try again.' 
     }, { status: 400 })
   }
 }

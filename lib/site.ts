@@ -2,7 +2,6 @@ export const SITE = {
   name: 'Xpress Care Pharmacy',
   address: { street: '3040 E 7 Mile', city: 'Detroit', state: 'MI', zip: '48234' },
   phone: '313-914-3736',
-  fax: '313-914-5105', // shows as "Fax: 313-914-5105"
   email: '', // optional, leave empty to hide
 };
 

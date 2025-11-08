@@ -5,7 +5,8 @@ A production-ready Next.js 14 website for a community pharmacy built with TypeSc
 ## 🚀 Features
 
 ### Core Functionality
-- **Online Prescription Refills** - Dynamic form with multiple Rx numbers
+- **Online Prescription Refills** - Email-based submission with client-side validation
+- **Prescription Transfer** - Seamless transfer from other pharmacies via email
 - **Contact System** - Location finder with pharmacy selection  
 - **Service Pages** - 13 detailed service pages with side navigation
 - **Specialty Pages** - 4 marketing pages for specialized services
@@ -135,13 +136,14 @@ npm start
 Create a `.env.local` file in the root directory:
 
 ```env
+# Required: Google Apps Script Web App URL for form submissions
+NEXT_PUBLIC_FORM_ENDPOINT=https://script.google.com/macros/s/XXXXX/exec
+
 # Optional: Google Maps API key for location finder
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
-
-# Optional: Email service configuration
-EMAIL_SERVICE_API_KEY=your_email_api_key
-EMAIL_FROM_ADDRESS=noreply@xpresscarepharmacy.com
 ```
+
+**Important:** See `GAS_SETUP.md` for complete instructions on setting up the Google Apps Script endpoint for form submissions.
 
 ## 📝 Content Management
 
@@ -253,13 +255,18 @@ Update service order in `/lib/servicesNav.ts` - this controls the left sidebar n
 ## 🔒 Security & Privacy
 
 ### Form Security
-- **PHI protection**: Automatic detection and blocking of sensitive data
-- **Input validation**: Client and server-side validation
-- **Rate limiting**: Protection against form spam
+- **Honeypot protection**: Hidden field filters out bot submissions
+- **Input validation**: Client-side validation with length limits
+- **Rate limiting**: Optional rate limiting in Google Apps Script (3 requests per 15 min per IP)
+- **Data sanitization**: All form data is sanitized before email composition
+- **No server-side storage**: Forms submit directly to Google Apps Script, no PHI stored
 
 ### Privacy Features
-- **PHI warnings**: Clear notices about not including health information
+- **Privacy disclaimer**: Forms include "Avoid entering unnecessary sensitive details"
+- **No PHI storage**: Forms email directly to pharmacy, no server-side persistence
+- **No CORS preflight**: Uses `application/x-www-form-urlencoded` to avoid CORS complexity
 - **Data handling**: Secure form submission with proper error handling
+- **Reply-To support**: Pharmacy can reply directly to patient email if provided
 
 ## 🚀 Performance
 
@@ -321,15 +328,46 @@ Individual components are built with testing in mind:
 - **Service schema** for individual service pages
 - **Breadcrumb schema** for navigation
 
+## 📧 Form Submission System
+
+### Email-Based Architecture
+
+Forms use a **Google Apps Script Web App** as an email relay endpoint:
+
+1. **No backend server required** - Site remains fully static on Vercel
+2. **Direct email delivery** - Forms POST to Google Apps Script → emails sent via Gmail
+3. **No PHI storage** - Data is never persisted server-side
+4. **JavaScript-enhanced with no-JS fallback** - Works with or without JavaScript
+5. **Test & production modes** - Easy switching between test and production recipients
+
+### Setup
+
+See **`GAS_SETUP.md`** for complete deployment instructions including:
+- Copy-paste Google Apps Script code
+- Step-by-step deployment guide
+- Configuration switches (TEST_MODE, recipients)
+- Rate limiting setup
+- Troubleshooting tips
+
+### Testing
+
+See **`tests/forms.email-only.md`** for comprehensive acceptance checklist covering:
+- Form validation
+- Data normalization (phone, DOB)
+- Email delivery and formatting
+- Honeypot protection
+- Accessibility
+- Security
+- No-JS fallback
+
 ## 🔄 Future Enhancements
 
 ### Recommended Additions
 1. **CMS Integration** - Contentful, Sanity, or headless WordPress
-2. **Email Integration** - Sendgrid, Mailgun, or Resend for form submissions
-3. **Map Integration** - Google Maps API for location finder
-4. **Search Functionality** - Site-wide search for services and content
-5. **Blog System** - Dynamic blog with categories and tags
-6. **Appointment Booking** - Integration with scheduling systems
+2. **Map Integration** - Google Maps API for location finder
+3. **Search Functionality** - Site-wide search for services and content
+4. **Blog System** - Dynamic blog with categories and tags
+5. **Appointment Booking** - Integration with scheduling systems
 
 ### Technical Improvements
 1. **Database Integration** - Replace in-memory form storage

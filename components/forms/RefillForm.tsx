@@ -1,75 +1,140 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, FormEvent } from 'react'
 import { InputField, TextareaField } from '@/components/ui/Field'
 import Button from '@/components/Button'
 import { Alert } from '@/components/ui/Alert'
-import { RefillFormData } from '@/lib/schemas'
 import { SITE, telHref } from '@/lib/site'
 
 type FormState = 'idle' | 'loading' | 'success' | 'error'
 
+// Get endpoint from environment or show error in dev
+function getEndpoint(): string | null {
+  if (typeof window === 'undefined') return null
+  return (window as any).NEXT_PUBLIC_FORM_ENDPOINT || process.env.NEXT_PUBLIC_FORM_ENDPOINT || null
+}
+
+// Normalize phone: strip non-digits except leading +
+function normalizePhone(phone: string): string {
+  if (phone.startsWith('+')) {
+    return '+' + phone.slice(1).replace(/\D/g, '')
+  }
+  return phone.replace(/\D/g, '')
+}
+
+// Normalize DOB to YYYY-MM-DD
+function normalizeDob(dob: string): string {
+  // Handle MM/DD/YYYY, MM-DD-YYYY, or already YYYY-MM-DD
+  const cleaned = dob.trim()
+  
+  // Try MM/DD/YYYY or MM-DD-YYYY
+  const mdyMatch = cleaned.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)
+  if (mdyMatch) {
+    const [, month, day, year] = mdyMatch
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  }
+  
+  // Try YYYY-MM-DD or YYYY/MM/DD
+  const ymdMatch = cleaned.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/)
+  if (ymdMatch) {
+    const [, year, month, day] = ymdMatch
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  }
+  
+  // Return as-is if can't parse
+  return cleaned
+}
+
 export function RefillForm() {
   const [state, setState] = useState<FormState>('idle')
-  const [formData, setFormData] = useState<Partial<RefillFormData>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const formRef = useRef<HTMLFormElement>(null)
 
-  const handleInputChange = (name: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error when user starts typing
+  const clearError = (name: string) => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
   }
 
-  const validateForm = (): boolean => {
+  const validateForm = (formData: FormData): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.patientName?.trim()) {
-      newErrors.patientName = 'Patient name is required'
+    const patientName = formData.get('patientName')?.toString().trim()
+    const dob = formData.get('dob')?.toString().trim()
+    const phone = formData.get('phone')?.toString().trim()
+    const medications = formData.get('medications')?.toString().trim()
+
+    if (!patientName || patientName.length < 2 || patientName.length > 100) {
+      newErrors.patientName = 'Patient name is required (2-100 characters)'
     }
-    if (!formData.dateOfBirth?.trim()) {
-      newErrors.dateOfBirth = 'Date of birth is required'
+    if (!dob) {
+      newErrors.dob = 'Date of birth is required'
     }
-    if (!formData.patientPhone?.trim()) {
-      newErrors.patientPhone = 'Phone number is required'
+    if (!phone || phone.length < 7) {
+      newErrors.phone = 'Phone number is required'
     }
-    if (!formData.rxNumbers?.trim()) {
-      newErrors.rxNumbers = 'At least one Rx number or medication is required'
+    if (!medications || medications.length < 1) {
+      newErrors.medications = 'At least one medication or Rx number is required'
     }
-    if (!formData.consent) {
-      newErrors.consent = 'You must confirm the information is accurate'
+    if (medications && medications.length > 1500) {
+      newErrors.medications = 'Medications field too long (max 1500 characters)'
     }
 
     setErrors(newErrors)
+    
+    // Focus first invalid field
+    if (Object.keys(newErrors).length > 0) {
+      const firstErrorField = Object.keys(newErrors)[0]
+      const field = formRef.current?.querySelector(`[name="${firstErrorField}"]`) as HTMLElement
+      field?.focus()
+    }
+
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
-    if (!validateForm()) return
+    if (!formRef.current) return
+
+    const formData = new FormData(formRef.current)
+    
+    // Normalize phone and dob
+    const phone = normalizePhone(formData.get('phone')?.toString() || '')
+    const dob = normalizeDob(formData.get('dob')?.toString() || '')
+    
+    formData.set('phone', phone)
+    formData.set('dob', dob)
+    formData.set('ts', new Date().toISOString())
+    formData.set('type', 'refill')
+
+    if (!validateForm(formData)) return
 
     setState('loading')
 
+    // Use Google Apps Script endpoint in production, fallback to Next.js API route in development
+    const endpoint = getEndpoint() || '/api/refill'
+
     try {
-      const response = await fetch('/api/refill', {
+      // Use URLSearchParams for application/x-www-form-urlencoded (no CORS preflight)
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          company: '' // Honeypot field
-        })
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(formData as any).toString(),
       })
 
       const result = await response.json()
 
       if (result.ok) {
         setState('success')
+        formRef.current?.reset()
       } else {
         setState('error')
       }
     } catch (error) {
+      console.error('Form submission error:', error)
       setState('error')
     }
   }
@@ -78,7 +143,7 @@ export function RefillForm() {
     return (
       <Alert type="success" title="Request Sent Successfully">
         <p>
-          Your refill request has been sent to our pharmacy. 
+          Thanks — your request was emailed to the pharmacy. 
           If you don't hear back within 24 hours, please call{' '}
           <a href={telHref(SITE.phone)} className="font-medium underline">
             {SITE.phone}
@@ -88,21 +153,39 @@ export function RefillForm() {
     )
   }
 
+  const endpoint = getEndpoint()
+  const showConfigWarning = process.env.NODE_ENV === 'development' && !endpoint
+
   return (
     <div className="space-y-6">
-      {state === 'error' && (
-        <Alert type="error" title="Unable to Send Request">
+      {showConfigWarning && (
+        <Alert type="error" title="Development Mode">
           <p>
-            We couldn't send your request by fax. Please call{' '}
-            <a href={telHref(SITE.phone)} className="font-medium underline">
-              {SITE.phone}
-            </a>{' '}
-            to place your refill order.
+            <strong>NEXT_PUBLIC_FORM_ENDPOINT is not configured.</strong><br/>
+            Forms will use the Next.js API route fallback. No emails will be sent.<br/>
+            See <code className="text-xs">GAS_SETUP.md</code> to configure the Google Apps Script endpoint.
           </p>
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {state === 'error' && (
+        <Alert type="error" title="Unable to Send Request">
+          <p>
+            We couldn't send your request. Please try again or call the pharmacy at{' '}
+            <a href={telHref(SITE.phone)} className="font-medium underline">
+              {SITE.phone}
+            </a>.
+          </p>
+        </Alert>
+      )}
+
+      <form 
+        ref={formRef} 
+        onSubmit={handleSubmit} 
+        action={endpoint || undefined}
+        method="POST"
+        className="space-y-6"
+      >
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-brand-navy">Patient Information</h3>
           
@@ -112,23 +195,23 @@ export function RefillForm() {
             error={errors.patientName}
             inputProps={{
               name: 'patientName',
-              value: formData.patientName || '',
-              onChange: (e) => handleInputChange('patientName', e.target.value),
               autoComplete: 'name',
-              placeholder: 'Enter your full name'
+              placeholder: 'Enter your full name',
+              onChange: () => clearError('patientName'),
+              'aria-describedby': errors.patientName ? 'patientName-error' : undefined,
             }}
           />
 
           <InputField
             label="Date of Birth"
             required
-            error={errors.dateOfBirth}
+            error={errors.dob}
             inputProps={{
-              name: 'dateOfBirth',
-              value: formData.dateOfBirth || '',
-              onChange: (e) => handleInputChange('dateOfBirth', e.target.value),
+              name: 'dob',
               autoComplete: 'bday',
-              placeholder: 'MM/DD/YYYY or MM-DD-YYYY'
+              placeholder: 'MM/DD/YYYY or MM-DD-YYYY',
+              onChange: () => clearError('dob'),
+              'aria-describedby': errors.dob ? 'dob-error' : undefined,
             }}
           />
 
@@ -136,26 +219,23 @@ export function RefillForm() {
             label="Phone Number"
             type="tel"
             required
-            error={errors.patientPhone}
+            error={errors.phone}
             inputProps={{
-              name: 'patientPhone',
-              value: formData.patientPhone || '',
-              onChange: (e) => handleInputChange('patientPhone', e.target.value),
+              name: 'phone',
               autoComplete: 'tel',
-              placeholder: '(313) 555-0123'
+              placeholder: '(313) 555-0123',
+              onChange: () => clearError('phone'),
+              'aria-describedby': errors.phone ? 'phone-error' : undefined,
             }}
           />
 
           <InputField
             label="Email Address (Optional)"
             type="email"
-            error={errors.patientEmail}
             inputProps={{
-              name: 'patientEmail',
-              value: formData.patientEmail || '',
-              onChange: (e) => handleInputChange('patientEmail', e.target.value),
+              name: 'email',
               autoComplete: 'email',
-              placeholder: 'your.email@example.com'
+              placeholder: 'your.email@example.com',
             }}
           />
         </div>
@@ -164,27 +244,34 @@ export function RefillForm() {
           <h3 className="text-lg font-medium text-brand-navy">Prescription Information</h3>
           
           <TextareaField
-            label="Rx Numbers / Medications"
+            label="Medications / Rx Numbers"
             required
             rows={4}
-            error={errors.rxNumbers}
+            error={errors.medications}
             textareaProps={{
-              name: 'rxNumbers',
-              value: formData.rxNumbers || '',
-              onChange: (e) => handleInputChange('rxNumbers', e.target.value),
-              placeholder: 'Enter Rx numbers or medication names (one per line or separated by commas)'
+              name: 'medications',
+              placeholder: 'Enter medication names or Rx numbers (one per line or separated by commas)',
+              onChange: () => clearError('medications'),
+              'aria-describedby': errors.medications ? 'medications-error' : undefined,
+            }}
+          />
+
+          <InputField
+            label="Rx Number (Optional)"
+            inputProps={{
+              name: 'rxNumber',
+              placeholder: 'Primary Rx number if available',
+              maxLength: 40,
             }}
           />
 
           <TextareaField
             label="Additional Notes (Optional)"
             rows={3}
-            error={errors.notes}
             textareaProps={{
               name: 'notes',
-              value: formData.notes || '',
-              onChange: (e) => handleInputChange('notes', e.target.value),
-              placeholder: 'Any special instructions or questions'
+              placeholder: 'Any special instructions or questions',
+              maxLength: 1500,
             }}
           />
         </div>
@@ -192,45 +279,33 @@ export function RefillForm() {
         {/* Honeypot field */}
         <input
           type="text"
-          name="company"
+          name="website"
           className="hidden"
           tabIndex={-1}
           autoComplete="off"
-          onChange={() => {}}
+          aria-hidden="true"
         />
 
         <div className="space-y-4">
-          <div className="flex items-start">
-            <input
-              id="consent"
-              name="consent"
-              type="checkbox"
-              checked={formData.consent || false}
-              onChange={(e) => handleInputChange('consent', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
-            />
-            <label htmlFor="consent" className="ml-2 block text-sm text-slate-600">
-              I confirm this information is accurate and authorize the pharmacy to process my refill.
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-          </div>
-          {errors.consent && (
-            <p className="text-sm text-red-600" role="alert">
-              {errors.consent}
-            </p>
-          )}
-
           <Button
             type="submit"
             disabled={state === 'loading'}
             className="w-full"
             size="lg"
           >
-            {state === 'loading' ? 'Sending...' : 'Send Refill Request'}
+            {state === 'loading' ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+              </span>
+            ) : 'Send Refill Request'}
           </Button>
 
           <p className="text-xs text-slate-500 text-center">
-            Faxed to {SITE.fax} securely
+            Avoid entering unnecessary sensitive details.
           </p>
         </div>
       </form>

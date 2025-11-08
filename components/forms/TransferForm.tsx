@@ -1,13 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, FormEvent } from 'react'
 import { InputField, TextareaField } from '@/components/ui/Field'
 import Button from '@/components/Button'
 import { Alert } from '@/components/ui/Alert'
-import { TransferFormData } from '@/lib/schemas'
 import { SITE, formatAddress, telHref } from '@/lib/site'
 
 type FormState = 'idle' | 'loading' | 'success' | 'error'
+
+// Get endpoint from environment or show error in dev
+function getEndpoint(): string | null {
+  if (typeof window === 'undefined') return null
+  return (window as any).NEXT_PUBLIC_FORM_ENDPOINT || process.env.NEXT_PUBLIC_FORM_ENDPOINT || null
+}
+
+// Normalize phone: strip non-digits except leading +
+function normalizePhone(phone: string): string {
+  if (phone.startsWith('+')) {
+    return '+' + phone.slice(1).replace(/\D/g, '')
+  }
+  return phone.replace(/\D/g, '')
+}
+
+// Normalize DOB to YYYY-MM-DD
+function normalizeDob(dob: string): string {
+  // Handle MM/DD/YYYY, MM-DD-YYYY, or already YYYY-MM-DD
+  const cleaned = dob.trim()
+  
+  // Try MM/DD/YYYY or MM-DD-YYYY
+  const mdyMatch = cleaned.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)
+  if (mdyMatch) {
+    const [, month, day, year] = mdyMatch
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  }
+  
+  // Try YYYY-MM-DD or YYYY/MM/DD
+  const ymdMatch = cleaned.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/)
+  if (ymdMatch) {
+    const [, year, month, day] = ymdMatch
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  }
+  
+  // Return as-is if can't parse
+  return cleaned
+}
 
 function DestinationCard() {
   return (
@@ -17,7 +53,6 @@ function DestinationCard() {
         <p className="font-medium">{SITE.name}</p>
         <p>{formatAddress(SITE.address)}</p>
         <p>Phone: <a href={telHref(SITE.phone)} className="hover:underline">{SITE.phone}</a></p>
-        <p>Fax: {SITE.fax}</p>
       </div>
     </div>
   )
@@ -25,81 +60,104 @@ function DestinationCard() {
 
 export function TransferForm() {
   const [state, setState] = useState<FormState>('idle')
-  const [formData, setFormData] = useState<Partial<TransferFormData>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const formRef = useRef<HTMLFormElement>(null)
 
-  const handleInputChange = (name: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error when user starts typing
+  const clearError = (name: string) => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
   }
 
-  const validateForm = (): boolean => {
+  const validateForm = (formData: FormData): boolean => {
     const newErrors: Record<string, string> = {}
 
-    // From pharmacy
-    if (!formData.fromPharmacyName?.trim()) {
-      newErrors.fromPharmacyName = 'Current pharmacy name is required'
+    const fromPharmacy = formData.get('fromPharmacy')?.toString().trim()
+    const fromPharmacyPhone = formData.get('fromPharmacyPhone')?.toString().trim()
+    const patientName = formData.get('patientName')?.toString().trim()
+    const dob = formData.get('dob')?.toString().trim()
+    const phone = formData.get('phone')?.toString().trim()
+    const medications = formData.get('medications')?.toString().trim()
+
+    if (!fromPharmacy || fromPharmacy.length < 2 || fromPharmacy.length > 120) {
+      newErrors.fromPharmacy = 'Current pharmacy name is required (2-120 characters)'
     }
-    if (!formData.fromPharmacyPhone?.trim()) {
+    if (!fromPharmacyPhone || fromPharmacyPhone.length < 7) {
       newErrors.fromPharmacyPhone = 'Current pharmacy phone is required'
     }
-
-    // Patient info
-    if (!formData.patientName?.trim()) {
-      newErrors.patientName = 'Patient name is required'
+    if (!patientName || patientName.length < 2 || patientName.length > 100) {
+      newErrors.patientName = 'Patient name is required (2-100 characters)'
     }
-    if (!formData.dateOfBirth?.trim()) {
-      newErrors.dateOfBirth = 'Date of birth is required'
+    if (!dob) {
+      newErrors.dob = 'Date of birth is required'
     }
-    if (!formData.patientPhone?.trim()) {
-      newErrors.patientPhone = 'Phone number is required'
+    if (!phone || phone.length < 7) {
+      newErrors.phone = 'Phone number is required'
     }
-
-    // Medications
-    if (!formData.meds?.trim()) {
-      newErrors.meds = 'At least one medication is required'
+    if (!medications || medications.length < 1) {
+      newErrors.medications = 'At least one medication is required'
     }
-
-    // Authorization
-    if (!formData.consent) {
-      newErrors.consent = 'You must authorize the transfer'
-    }
-    if (!formData.eSignature?.trim()) {
-      newErrors.eSignature = 'Electronic signature is required'
+    if (medications && medications.length > 1500) {
+      newErrors.medications = 'Medications field too long (max 1500 characters)'
     }
 
     setErrors(newErrors)
+    
+    // Focus first invalid field
+    if (Object.keys(newErrors).length > 0) {
+      const firstErrorField = Object.keys(newErrors)[0]
+      const field = formRef.current?.querySelector(`[name="${firstErrorField}"]`) as HTMLElement
+      field?.focus()
+    }
+
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
-    if (!validateForm()) return
+    if (!formRef.current) return
+
+    const formData = new FormData(formRef.current)
+    
+    // Normalize phones and dob
+    const phone = normalizePhone(formData.get('phone')?.toString() || '')
+    const fromPharmacyPhone = normalizePhone(formData.get('fromPharmacyPhone')?.toString() || '')
+    const dob = normalizeDob(formData.get('dob')?.toString() || '')
+    
+    formData.set('phone', phone)
+    formData.set('fromPharmacyPhone', fromPharmacyPhone)
+    formData.set('dob', dob)
+    formData.set('ts', new Date().toISOString())
+    formData.set('type', 'transfer')
+
+    if (!validateForm(formData)) return
 
     setState('loading')
 
+    // Use Google Apps Script endpoint in production, fallback to Next.js API route in development
+    const endpoint = getEndpoint() || '/api/transfer'
+
     try {
-      const response = await fetch('/api/transfer', {
+      // Use URLSearchParams for application/x-www-form-urlencoded (no CORS preflight)
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          company: '' // Honeypot field
-        })
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(formData as any).toString(),
       })
 
       const result = await response.json()
 
       if (result.ok) {
         setState('success')
+        formRef.current?.reset()
       } else {
         setState('error')
       }
     } catch (error) {
+      console.error('Form submission error:', error)
       setState('error')
     }
   }
@@ -108,7 +166,7 @@ export function TransferForm() {
     return (
       <Alert type="success" title="Transfer Request Sent Successfully">
         <p>
-          Your prescription transfer request has been sent to our pharmacy. 
+          Thanks — your request was emailed to the pharmacy. 
           We'll coordinate the transfer from your current pharmacy. 
           If you don't hear back within 24 hours, please call{' '}
           <a href={telHref(SITE.phone)} className="font-medium underline">
@@ -119,71 +177,64 @@ export function TransferForm() {
     )
   }
 
+  const endpoint = getEndpoint()
+  const showConfigWarning = process.env.NODE_ENV === 'development' && !endpoint
+
   return (
     <div className="space-y-6">
-      {state === 'error' && (
-        <Alert type="error" title="Unable to Send Request">
+      {showConfigWarning && (
+        <Alert type="error" title="Development Mode">
           <p>
-            We couldn't send your transfer request by fax. Please call{' '}
-            <a href={telHref(SITE.phone)} className="font-medium underline">
-              {SITE.phone}
-            </a>{' '}
-            to request the transfer.
+            <strong>NEXT_PUBLIC_FORM_ENDPOINT is not configured.</strong><br/>
+            Forms will use the Next.js API route fallback. No emails will be sent.<br/>
+            See <code className="text-xs">GAS_SETUP.md</code> to configure the Google Apps Script endpoint.
           </p>
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      {state === 'error' && (
+        <Alert type="error" title="Unable to Send Request">
+          <p>
+            We couldn't send your request. Please try again or call the pharmacy at{' '}
+            <a href={telHref(SITE.phone)} className="font-medium underline">
+              {SITE.phone}
+            </a>.
+          </p>
+        </Alert>
+      )}
+
+      <form 
+        ref={formRef} 
+        onSubmit={handleSubmit}
+        action={endpoint || undefined}
+        method="POST"
+        className="space-y-8"
+      >
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-brand-navy">From (Current Pharmacy)</h3>
           
           <InputField
             label="Pharmacy Name"
             required
-            error={errors.fromPharmacyName}
+            error={errors.fromPharmacy}
             inputProps={{
-              name: 'fromPharmacyName',
-              value: formData.fromPharmacyName || '',
-              onChange: (e) => handleInputChange('fromPharmacyName', e.target.value),
-              placeholder: 'Enter your current pharmacy name'
+              name: 'fromPharmacy',
+              placeholder: 'Enter your current pharmacy name',
+              onChange: () => clearError('fromPharmacy'),
+              'aria-describedby': errors.fromPharmacy ? 'fromPharmacy-error' : undefined,
             }}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="Pharmacy Phone"
-              type="tel"
-              required
-              error={errors.fromPharmacyPhone}
-              inputProps={{
-                name: 'fromPharmacyPhone',
-                value: formData.fromPharmacyPhone || '',
-                onChange: (e) => handleInputChange('fromPharmacyPhone', e.target.value),
-                placeholder: '(313) 555-0123'
-              }}
-            />
-
-            <InputField
-              label="Pharmacy Fax (Optional)"
-              type="tel"
-              error={errors.fromPharmacyFax}
-              inputProps={{
-                name: 'fromPharmacyFax',
-                value: formData.fromPharmacyFax || '',
-                onChange: (e) => handleInputChange('fromPharmacyFax', e.target.value),
-                placeholder: '(313) 555-0124'
-              }}
-            />
-          </div>
-
           <InputField
-            label="ZIP Code (Optional)"
-            error={errors.fromPharmacyZip}
+            label="Pharmacy Phone"
+            type="tel"
+            required
+            error={errors.fromPharmacyPhone}
             inputProps={{
-              name: 'fromPharmacyZip',
-              value: formData.fromPharmacyZip || '',
-              onChange: (e) => handleInputChange('fromPharmacyZip', e.target.value),
-              placeholder: '48234'
+              name: 'fromPharmacyPhone',
+              placeholder: '(313) 555-0123',
+              onChange: () => clearError('fromPharmacyPhone'),
+              'aria-describedby': errors.fromPharmacyPhone ? 'fromPharmacyPhone-error' : undefined,
             }}
           />
         </div>
@@ -199,10 +250,10 @@ export function TransferForm() {
             error={errors.patientName}
             inputProps={{
               name: 'patientName',
-              value: formData.patientName || '',
-              onChange: (e) => handleInputChange('patientName', e.target.value),
               autoComplete: 'name',
-              placeholder: 'Enter your full name'
+              placeholder: 'Enter your full name',
+              onChange: () => clearError('patientName'),
+              'aria-describedby': errors.patientName ? 'patientName-error' : undefined,
             }}
           />
 
@@ -210,13 +261,13 @@ export function TransferForm() {
             <InputField
               label="Date of Birth"
               required
-              error={errors.dateOfBirth}
+              error={errors.dob}
               inputProps={{
-                name: 'dateOfBirth',
-                value: formData.dateOfBirth || '',
-                onChange: (e) => handleInputChange('dateOfBirth', e.target.value),
+                name: 'dob',
                 autoComplete: 'bday',
-                placeholder: 'MM/DD/YYYY'
+                placeholder: 'MM/DD/YYYY',
+                onChange: () => clearError('dob'),
+                'aria-describedby': errors.dob ? 'dob-error' : undefined,
               }}
             />
 
@@ -224,16 +275,26 @@ export function TransferForm() {
               label="Phone Number"
               type="tel"
               required
-              error={errors.patientPhone}
+              error={errors.phone}
               inputProps={{
-                name: 'patientPhone',
-                value: formData.patientPhone || '',
-                onChange: (e) => handleInputChange('patientPhone', e.target.value),
+                name: 'phone',
                 autoComplete: 'tel',
-                placeholder: '(313) 555-0123'
+                placeholder: '(313) 555-0123',
+                onChange: () => clearError('phone'),
+                'aria-describedby': errors.phone ? 'phone-error' : undefined,
               }}
             />
           </div>
+
+          <InputField
+            label="Email Address (Optional)"
+            type="email"
+            inputProps={{
+              name: 'email',
+              autoComplete: 'email',
+              placeholder: 'your.email@example.com',
+            }}
+          />
         </div>
 
         <div className="space-y-4">
@@ -243,12 +304,32 @@ export function TransferForm() {
             label="List of Medications"
             required
             rows={5}
-            error={errors.meds}
+            error={errors.medications}
             textareaProps={{
-              name: 'meds',
-              value: formData.meds || '',
-              onChange: (e) => handleInputChange('meds', e.target.value),
-              placeholder: 'List all medications you want to transfer (one per line or separated by commas)'
+              name: 'medications',
+              placeholder: 'List all medications you want to transfer (one per line or separated by commas)',
+              onChange: () => clearError('medications'),
+              maxLength: 1500,
+              'aria-describedby': errors.medications ? 'medications-error' : undefined,
+            }}
+          />
+
+          <InputField
+            label="Rx Number (Optional)"
+            inputProps={{
+              name: 'rxNumber',
+              placeholder: 'Primary Rx number if available',
+              maxLength: 40,
+            }}
+          />
+
+          <TextareaField
+            label="Additional Notes (Optional)"
+            rows={3}
+            textareaProps={{
+              name: 'notes',
+              placeholder: 'Any special instructions',
+              maxLength: 1500,
             }}
           />
         </div>
@@ -256,59 +337,33 @@ export function TransferForm() {
         {/* Honeypot field */}
         <input
           type="text"
-          name="company"
+          name="website"
           className="hidden"
           tabIndex={-1}
           autoComplete="off"
-          onChange={() => {}}
+          aria-hidden="true"
         />
 
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-brand-navy">Authorization</h3>
-          
-          <div className="flex items-start">
-            <input
-              id="consent"
-              name="consent"
-              type="checkbox"
-              checked={formData.consent || false}
-              onChange={(e) => handleInputChange('consent', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
-            />
-            <label htmlFor="consent" className="ml-2 block text-sm text-slate-600">
-              I authorize my prescriptions to be transferred to Xpress Care Pharmacy.
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-          </div>
-          {errors.consent && (
-            <p className="text-sm text-red-600" role="alert">
-              {errors.consent}
-            </p>
-          )}
-
-          <InputField
-            label="Electronic Signature (Type your full name)"
-            required
-            error={errors.eSignature}
-            inputProps={{
-              name: 'eSignature',
-              value: formData.eSignature || '',
-              onChange: (e) => handleInputChange('eSignature', e.target.value),
-              placeholder: 'Type your full name as your signature'
-            }}
-          />
-
           <Button
             type="submit"
             disabled={state === 'loading'}
             className="w-full"
             size="lg"
           >
-            {state === 'loading' ? 'Sending...' : 'Send Transfer Request'}
+            {state === 'loading' ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+              </span>
+            ) : 'Send Transfer Request'}
           </Button>
 
           <p className="text-xs text-slate-500 text-center">
-            Faxed to {SITE.fax} securely
+            Avoid entering unnecessary sensitive details.
           </p>
         </div>
       </form>

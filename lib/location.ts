@@ -75,7 +75,7 @@ export function dayToSchema(d: string) {
 }
 
 export function getFullAddress() {
-  return `${LOCATION.addressLine}, ${LOCATION.city}, ${LOCATION.state} ${LOCATION.postalCode}`;
+  return `${LOCATION.addressLine1}, ${LOCATION.city}, ${LOCATION.state} ${LOCATION.zip}`;
 }
 
 
