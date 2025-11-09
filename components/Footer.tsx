@@ -203,7 +203,7 @@ export default function Footer() {
                   className="text-white hover:text-white/70 transition-colors duration-200 font-medium"
                   style={{ fontSize: '0.8rem' }}
                 >
-                  HikmaDevs
+                  HikmaCoding
                 </a>
               </p>
             </div>
