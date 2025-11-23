@@ -89,16 +89,16 @@ export default function ContactCallout() {
               <h3 className="text-xl font-bold text-white mb-2 font-heading">Contact</h3>
               <div className="space-y-1">
                 <div>
-                  <span className="text-gray-300 text-sm">Phone: </span>
+                  <span className="text-gray-200">Phone: </span>
                   <a 
                     href="tel:+13139143736"
-                    className="text-white hover:text-gray-200 transition-colors duration-200 text-lg font-semibold"
+                    className="text-white hover:text-gray-200 transition-colors duration-200"
                   >
                     (313) 914-3736
                   </a>
                 </div>
-                <div className="text-gray-200 text-base">
-                  <span className="text-gray-300 text-sm">Fax: </span>
+                <div>
+                  <span className="text-gray-200">Fax: </span>
                   <span className="text-white">(313) 914-5105</span>
                 </div>
               </div>
