@@ -47,20 +47,25 @@ export default function ServicesPage() {
           <p className="text-white/90 mb-6">
             Our pharmacists are here to help answer any questions about our services and medications.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto text-white/90">
-            <div>
-              <p className="font-semibold text-white mb-1">Phone</p>
-              <a href="tel:313-914-3736" className="hover:text-white transition-colors">
-                (313) 914-3736
-              </a>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="text-left">
+              <p className="font-semibold text-white mb-2">Contact Us</p>
+              <div className="space-y-1 text-white/90">
+                <div>
+                  <span className="text-white/70">Phone: </span>
+                  <a href="tel:313-914-3736" className="text-white hover:text-white/80 transition-colors font-semibold">
+                    (313) 914-3736
+                  </a>
+                </div>
+                <div>
+                  <span className="text-white/70">Fax: </span>
+                  <span className="text-white font-semibold">(313) 914-5105</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-white mb-1">Fax</p>
-              <p>(313) 914-5105</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white mb-1">Address</p>
-              <p className="text-sm">3040 E 7 Mile, Detroit, MI 48234</p>
+            <div className="text-left">
+              <p className="font-semibold text-white mb-2">Address</p>
+              <p className="text-white/90">3040 E 7 Mile<br />Detroit, MI 48234</p>
             </div>
           </div>
         </div>

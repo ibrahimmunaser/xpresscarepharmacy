@@ -80,19 +80,28 @@ export default function ContactCallout() {
             </div>
           </div>
 
-          {/* Phone */}
+          {/* Phone & Fax */}
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
               <PhoneIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-2 font-heading">Phone</h3>
-              <a 
-                href="tel:+13139143736"
-                className="text-gray-200 hover:text-white transition-colors duration-200 text-lg"
-              >
-                (313) 914-3736
-              </a>
+              <h3 className="text-xl font-bold text-white mb-2 font-heading">Contact</h3>
+              <div className="space-y-1">
+                <div>
+                  <span className="text-gray-300 text-sm">Phone: </span>
+                  <a 
+                    href="tel:+13139143736"
+                    className="text-white hover:text-gray-200 transition-colors duration-200 text-lg font-semibold"
+                  >
+                    (313) 914-3736
+                  </a>
+                </div>
+                <div className="text-gray-200 text-base">
+                  <span className="text-gray-300 text-sm">Fax: </span>
+                  <span className="text-white">(313) 914-5105</span>
+                </div>
+              </div>
             </div>
           </div>
 
