@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: 'Clinician-supervised Semaglutide (GLP-1) weight management program at Xpress Care Pharmacy in Detroit. Personalized plans, ongoing support, and professional guidance.',
     keywords: 'semaglutide, GLP-1, weight management, prescription weight loss, medical supervision, Detroit pharmacy',
     alternates: {
-      canonical: '/semaglutide',
+    canonical: '/semaglutide',
     },
     openGraph: {
       title: 'Semaglutide (GLP-1) Weight Management | Xpress Care Pharmacy',
@@ -57,15 +57,15 @@ function SemaglutideContent() {
   // Hero data
   const heroData = {
     kicker: "Semaglutide GLP-1 Injection Service",
-    title: "Achieve Your Weight Loss Goals with Semaglutide GLP-1",
-    desc: "[PLACEHOLDER COPY – replace after clinical/legal review] Our pharmacists provide supervised Semaglutide GLP-1 injection services as part of a comprehensive weight management program under medical supervision.",
+    title: "Achieve Your Weight Loss Goals",
+    desc: "Semaglutide GLP-1 is a clinically proven, safe, and effective medication designed to help individuals achieve their weight loss goals and improve their overall health. We work with insurances to obtain authorization for coverage of these medications to assist in weight loss goals.",
     primaryCta: {
-      label: "Call Us Now",
-      href: "tel:3139143736",
-      analytics: "cta:call-now:semaglutide-hero"
+      label: "Submit Your Referral",
+      href: "/referrals",
+      analytics: "cta:referral:semaglutide-hero"
     },
     secondaryCta: {
-      label: "Contact Us",
+      label: "Contact us",
       href: "/contact",
       analytics: "cta:contact:semaglutide-hero"
     },

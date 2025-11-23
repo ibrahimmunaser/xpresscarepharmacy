@@ -19,10 +19,10 @@ export default function SemaglutidePage() {
                 Semaglutide GLP-1 Injection Service
               </div>
               <h1 className="mt-4 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
-                Achieve Your Weight Loss Goals with Just $25/Week
+                Achieve Your Weight Loss Goals
               </h1>
               <p className="mt-4 max-w-prose text-white/90">
-                Semaglutide GLP-1 is a clinically proven, safe, and effective medication designed to help individuals achieve their weight loss goals and improve their overall health.
+                Semaglutide GLP-1 is a clinically proven, safe, and effective medication designed to help individuals achieve their weight loss goals and improve their overall health. We work with insurances to obtain authorization for coverage of these medications to assist in weight loss goals.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -182,8 +182,8 @@ export default function SemaglutidePage() {
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-brand-100">
                 <CurrencyDollarIcon className="h-6 w-6 text-brand-navy" aria-hidden="true" />
               </div>
-              <div className="font-semibold text-brand-navy">No Hidden Cost</div>
-              <div className="mt-2 text-slate-600">Transparent pricing: just $25 per week, with direct insurance billing where applicable.</div>
+              <div className="font-semibold text-brand-navy">Insurance Authorization</div>
+              <div className="mt-2 text-slate-600">We work with your insurance to obtain authorization for coverage of weight loss medications.</div>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 text-sm shadow-sm">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-brand-100">

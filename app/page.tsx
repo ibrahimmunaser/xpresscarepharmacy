@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Hero from '@/components/Hero'
 import ServiceIconGrid from '@/components/home/ServiceIconGrid'
 import BenefitRibbon from '@/components/home/BenefitRibbon'
@@ -138,6 +139,29 @@ export default function HomePage() {
         title="Join Our Family for Cost-Effective Health Care" 
         benefits={benefits} 
       />
+      
+      {/* Partnership Section */}
+      <section className="bg-white py-8">
+        <div className="max-w-content mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
+            <p className="text-brand-navy font-semibold text-lg">Proud Partner Of</p>
+            <a 
+              href="https://www.nimblerx.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="transition-opacity hover:opacity-80"
+            >
+              <Image 
+                src="/images/nimble.png" 
+                alt="Nimble - Pharmacy Technology Partner" 
+                width={180}
+                height={48}
+                className="h-12 w-auto"
+              />
+            </a>
+          </div>
+        </div>
+      </section>
       
       {/* Split Content - Who We Are */}
       <SplitContent {...splitContentData} imageLeft />

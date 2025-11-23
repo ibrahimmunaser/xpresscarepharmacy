@@ -225,13 +225,13 @@ export function TransferForm() {
             }}
           />
 
-          <InputField
-            label="Pharmacy Phone"
-            type="tel"
-            required
-            error={errors.fromPharmacyPhone}
-            inputProps={{
-              name: 'fromPharmacyPhone',
+            <InputField
+              label="Pharmacy Phone"
+              type="tel"
+              required
+              error={errors.fromPharmacyPhone}
+              inputProps={{
+                name: 'fromPharmacyPhone',
               placeholder: '(313) 555-0123',
               onChange: () => clearError('fromPharmacyPhone'),
               'aria-describedby': errors.fromPharmacyPhone ? 'fromPharmacyPhone-error' : undefined,

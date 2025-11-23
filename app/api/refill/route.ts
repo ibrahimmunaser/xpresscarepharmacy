@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     // For no-JS fallback, return a simple success response
     // The main submission path goes directly to Google Apps Script
     return NextResponse.json({ 
-      ok: true,
+      ok: true, 
       message: 'Your refill request has been submitted successfully.'
     })
     

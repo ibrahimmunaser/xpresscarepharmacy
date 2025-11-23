@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -186,6 +187,29 @@ export default function Footer() {
                 </li>
               </ul>
             </nav>
+          </div>
+        </div>
+
+        {/* Partnership Section */}
+        <div className="border-t border-white/10">
+          <div className="max-w-content mx-auto px-6 py-6">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm text-white/80 font-medium">Proud Partner Of</p>
+              <a 
+                href="https://www.nimblerx.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="transition-opacity hover:opacity-80"
+              >
+                <Image 
+                  src="/images/nimble.png" 
+                  alt="Nimble" 
+                  width={150}
+                  height={40}
+                  className="h-10 w-auto"
+                />
+              </a>
+            </div>
           </div>
         </div>
 
