@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPinIcon, PhoneIcon, ClockIcon } from '@heroicons/react/24/outline'
 
 export default function ContactCallout() {
@@ -14,20 +15,38 @@ export default function ContactCallout() {
         </p>
       </div>
 
-      {/* Full Width Google Map */}
-      <div className="mb-12 w-full">
-        <div className="relative overflow-hidden shadow-lg">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2943.8234567890123!2d-83.0458!3d42.4031!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8824d2b1f1234567%3A0x1234567890abcdef!2s3040%20E%207%20Mile%20Rd%2C%20Detroit%2C%20MI%2048234!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus"
-            width="100%"
-            height="500"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Xpress Care Pharmacy Location"
-            className="w-full h-[500px]"
-          />
+      {/* Map and Pharmacy Image Grid */}
+      <div className="mb-12 max-w-content mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Google Map */}
+          <div>
+            <div className="relative overflow-hidden shadow-lg rounded-lg">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2943.8234567890123!2d-83.0458!3d42.4031!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8824d2b1f1234567%3A0x1234567890abcdef!2s3040%20E%207%20Mile%20Rd%2C%20Detroit%2C%20MI%2048234!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus"
+                width="100%"
+                height="400"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Xpress Care Pharmacy Location"
+                className="w-full h-[400px]"
+              />
+            </div>
+          </div>
+
+          {/* Pharmacy Image */}
+          <div>
+            <div className="relative overflow-hidden shadow-lg rounded-lg h-[400px]">
+              <Image
+                src="/images/pharmacy.jpg"
+                alt="Xpress Care Pharmacy storefront"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+          </div>
         </div>
         
         {/* Get Directions Button */}
