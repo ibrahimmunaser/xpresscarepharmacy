@@ -38,6 +38,32 @@ export default function ServicesPage() {
             </Card>
           ))}
         </div>
+
+        {/* Contact Information */}
+        <div className="mt-12 p-8 bg-brand-navy rounded-xl text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Have Questions About Our Services?
+          </h2>
+          <p className="text-white/90 mb-6">
+            Our pharmacists are here to help answer any questions about our services and medications.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto text-white/90">
+            <div>
+              <p className="font-semibold text-white mb-1">Phone</p>
+              <a href="tel:313-914-3736" className="hover:text-white transition-colors">
+                (313) 914-3736
+              </a>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-1">Fax</p>
+              <p>(313) 914-5105</p>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-1">Address</p>
+              <p className="text-sm">3040 E 7 Mile, Detroit, MI 48234</p>
+            </div>
+          </div>
+        </div>
       </div>
     </Section>
   )

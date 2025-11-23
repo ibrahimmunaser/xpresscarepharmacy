@@ -73,6 +73,36 @@ export default function SpecialtyPage() {
       
       {/* Split Content - Why Choose Us */}
       <SplitContent {...splitContentData} imageLeft />
+
+      {/* Contact Section */}
+      <section className="bg-white py-12">
+        <div className="max-w-content mx-auto px-6">
+          <div className="bg-brand-navy rounded-xl p-8 text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Questions About Our Specialized Services?
+            </h2>
+            <p className="text-white/90 mb-6 max-w-2xl mx-auto">
+              Our team is ready to discuss your unique pharmacy needs and create a custom solution for your facility or situation.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto text-white/90">
+              <div>
+                <p className="font-semibold text-white mb-1">Phone</p>
+                <a href="tel:313-914-3736" className="hover:text-white transition-colors">
+                  (313) 914-3736
+                </a>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Fax</p>
+                <p>(313) 914-5105</p>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Address</p>
+                <p className="text-sm">3040 E 7 Mile, Detroit, MI 48234</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   )
 }

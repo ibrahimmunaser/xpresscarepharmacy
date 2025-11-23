@@ -84,6 +84,32 @@ export default function OnlineRefillPage() {
                 </div>
               ))}
             </div>
+
+            {/* Contact Information */}
+            <div className="mt-12 p-6 bg-brand-navy rounded-xl text-center">
+              <h3 className="text-xl font-bold text-white mb-4">
+                Need Help with Your Refill?
+              </h3>
+              <p className="text-white/90 mb-6">
+                Our team is available to assist you with any questions about your prescriptions.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white/90">
+                <div>
+                  <p className="font-semibold text-white mb-1">Phone</p>
+                  <a href="tel:313-914-3736" className="hover:text-white transition-colors">
+                    (313) 914-3736
+                  </a>
+                </div>
+                <div>
+                  <p className="font-semibold text-white mb-1">Fax</p>
+                  <p>(313) 914-5105</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-white mb-1">Address</p>
+                  <p className="text-sm">3040 E 7 Mile, Detroit, MI 48234</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

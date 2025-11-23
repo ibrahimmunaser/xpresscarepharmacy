@@ -32,6 +32,27 @@ export default function RefillPage() {
                 We use encrypted fax via a HIPAA-capable provider. We do not store your form data online after transmission.
               </p>
             </div>
+
+            {/* Contact Information */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-md">
+              <h3 className="text-sm font-semibold text-brand-navy mb-3">Need Help?</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="font-medium text-brand-navy">Phone</p>
+                  <a href="tel:313-914-3736" className="text-blue-600 hover:underline">
+                    (313) 914-3736
+                  </a>
+                </div>
+                <div>
+                  <p className="font-medium text-brand-navy">Fax</p>
+                  <p className="text-slate-600">(313) 914-5105</p>
+                </div>
+                <div>
+                  <p className="font-medium text-brand-navy">Address</p>
+                  <p className="text-slate-600">3040 E 7 Mile, Detroit, MI 48234</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Section>
