@@ -88,10 +88,10 @@ export default function ContactCallout() {
             <div>
               <h3 className="text-xl font-bold text-white mb-2 font-heading">Phone</h3>
               <a 
-                href="tel:+13139145105"
+                href="tel:+13139143736"
                 className="text-gray-200 hover:text-white transition-colors duration-200 text-lg"
               >
-                (313) 914-5105
+                (313) 914-3736
               </a>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function ContactCallout() {
         {/* Contact Buttons - Centered Below Contact Info */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <a
-            href="tel:+13139145105"
+            href="tel:+13139143736"
             className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-brand-navy font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
           >
             <PhoneIcon className="w-6 h-6" />
