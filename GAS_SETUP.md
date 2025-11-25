@@ -295,7 +295,7 @@ function sendFormEmail(data) {
   // Email options
   const options = {
     htmlBody: htmlBody,
-    name: 'Xpress Care Pharmacy Forms'
+    name: email ? `${patientName} (via Xpress Care Pharmacy Forms)` : 'Xpress Care Pharmacy Forms'
   };
   
   // Set Reply-To if patient provided email

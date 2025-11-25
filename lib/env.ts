@@ -11,6 +11,10 @@ const envSchema = z.object({
   // This is public and will be exposed to the client
   NEXT_PUBLIC_FORM_ENDPOINT: z.string().optional(),
 
+  // Resend email service (for sending emails from patient's address)
+  RESEND_API_KEY: z.string().optional(),
+  PHARMACY_EMAIL: z.string().email().optional().default('ibrahimmunaser@gmail.com'),
+
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 })
 

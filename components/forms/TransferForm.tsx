@@ -8,12 +8,6 @@ import { SITE, formatAddress, telHref } from '@/lib/site'
 
 type FormState = 'idle' | 'loading' | 'success' | 'error'
 
-// Get endpoint from environment or show error in dev
-function getEndpoint(): string | null {
-  if (typeof window === 'undefined') return null
-  return (window as any).NEXT_PUBLIC_FORM_ENDPOINT || process.env.NEXT_PUBLIC_FORM_ENDPOINT || null
-}
-
 // Normalize phone: strip non-digits except leading +
 function normalizePhone(phone: string): string {
   if (phone.startsWith('+')) {
@@ -135,8 +129,8 @@ export function TransferForm() {
 
     setState('loading')
 
-    // Use Google Apps Script endpoint in production, fallback to Next.js API route in development
-    const endpoint = getEndpoint() || '/api/transfer'
+    // Always use Next.js API route (which uses Resend to send FROM patient's email)
+    const endpoint = '/api/transfer'
 
     try {
       // Use URLSearchParams for application/x-www-form-urlencoded (no CORS preflight)
@@ -177,20 +171,11 @@ export function TransferForm() {
     )
   }
 
-  const endpoint = getEndpoint()
-  const showConfigWarning = process.env.NODE_ENV === 'development' && !endpoint
+  // Forms now always use Next.js API routes with Resend
+  const showConfigWarning = false
 
   return (
     <div className="space-y-6">
-      {showConfigWarning && (
-        <Alert type="error" title="Development Mode">
-          <p>
-            <strong>NEXT_PUBLIC_FORM_ENDPOINT is not configured.</strong><br/>
-            Forms will use the Next.js API route fallback. No emails will be sent.<br/>
-            See <code className="text-xs">GAS_SETUP.md</code> to configure the Google Apps Script endpoint.
-          </p>
-        </Alert>
-      )}
 
       {state === 'error' && (
         <Alert type="error" title="Unable to Send Request">
@@ -206,7 +191,7 @@ export function TransferForm() {
       <form 
         ref={formRef} 
         onSubmit={handleSubmit}
-        action={endpoint || undefined}
+        action="/api/transfer"
         method="POST"
         className="space-y-8"
       >
