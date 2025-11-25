@@ -116,7 +116,7 @@ async function sendEmailViaResend(data: any) {
   await resend.emails.send({
     from: `${fromName} <${fromEmail}>`,
     to: pharmacyEmail,
-    replyTo: email || fromEmail, // Always set Reply-To to patient's email if available
+    reply_to: email || fromEmail, // Always set Reply-To to patient's email if available
     subject,
     text: plainBody,
     html: htmlBody,
