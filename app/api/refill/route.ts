@@ -44,7 +44,7 @@ async function sendEmailViaResend(data: any) {
   }
 
   const resend = new Resend(env.RESEND_API_KEY)
-  const pharmacyEmail = env.PHARMACY_EMAIL || 'ibrahimmunaser@gmail.com'
+  const pharmacyEmail = env.PHARMACY_EMAIL || 'munasergames@gmail.com' // TODO: Change back to Pharmacy.xpresscare@gmail.com after testing
   
   // Extract and sanitize data
   const patientName = truncate(data.patientName, 100)

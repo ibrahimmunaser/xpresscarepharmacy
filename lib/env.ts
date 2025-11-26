@@ -13,7 +13,7 @@ const envSchema = z.object({
 
   // Resend email service (for sending emails from patient's address)
   RESEND_API_KEY: z.string().optional(),
-  PHARMACY_EMAIL: z.string().email().optional().default('munasergames@gmail.com'),
+  PHARMACY_EMAIL: z.string().email().optional().default('munasergames@gmail.com'), // TODO: Change back to Pharmacy.xpresscare@gmail.com after testing
 
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 })
